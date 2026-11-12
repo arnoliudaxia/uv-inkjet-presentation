@@ -64,6 +64,16 @@ TEST_URL=http://127.0.0.1:3000 npm run test:browser
 
 部署 `dist/`，不要将开发服务暴露到公网。history 路由需要将未知路径回退到 `index.html`；构建包含 `404.html` 和 `_redirects`。不能直接双击 HTML 用 `file://` 打开。子路径部署可用 `npm run build -- --base /demo/`。
 
+## GitHub Pages 部署
+
+- 仓库：https://github.com/arnoliudaxia/uv-inkjet-presentation
+- 在线课件：https://arnoliudaxia.github.io/uv-inkjet-presentation/
+- 结束页：https://arnoliudaxia.github.io/uv-inkjet-presentation/8
+
+`.github/workflows/pages.yml` 在推送 `main` 时自动部署，也支持手动触发。使用 Node.js 24、`npm ci` 和 `npm run build -- --base /uv-inkjet-presentation/` 构建，只上传 `dist/`；仓库 Pages 来源设置为 **GitHub Actions**。
+
+部署时将 `dist/index.html` 复制为 `dist/404.html`，使 `/uv-inkjet-presentation/2`、`/uv-inkjet-presentation/8` 等深链接能够启动 Slidev。GitHub Pages 对这些回退请求仍返回 HTTP 404，但浏览器会正常加载课件；首页及静态资源返回 HTTP 200。上文 `/1` 至 `/8` 路径均相对于课件部署根目录，线上访问时需带 `/uv-inkjet-presentation/` 前缀。
+
 ## 文件
 
 - `slides.md`：8 页编排、标题、演讲备注和逐步揭示数量。
