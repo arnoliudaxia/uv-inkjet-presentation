@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#080f1c">
+  <title>微观之间 · UV 打印喷头课堂</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main class="deck" id="deck" aria-label="UV 打印喷头教学幻灯片">
+    <header class="masthead">
+      <a class="brand" href="#1" aria-label="回到结构认识"><span class="brand-mark">μ</span> 微观之间 <span class="brand-sub">PRINTHEAD LAB</span></a>
+      <div class="header-tools"><span class="course-tag">UV 喷墨技术 / 微课堂</span><button id="helpButton" aria-label="查看操作帮助" title="操作帮助 (?)">?</button><button id="fullscreen" title="全屏 (F)" aria-label="切换全屏">⛶</button></div>
+    </header>
+
+    <section class="slide active" id="slide1" aria-labelledby="title1">
+      <div class="slide-heading"><div><p class="eyebrow">01 / ANATOMY</p><h1 id="title1">一滴墨，从哪里开始？</h1><p class="subtitle">认识 UV 压电喷头的三个关键部件，让内部结构先连起来。</p></div><span class="topic-pill">结构认识</span></div>
+      <div class="anatomy-layout">
+        <div class="visual-panel"><div class="panel-label"><span class="live-dot"></span> 单通道剖面 · 结构示意 <span>非实际比例</span></div><div id="anatomyDiagram" class="diagram-host"></div><div class="diagram-foot"><span><i class="swatch cyan"></i>墨水通路</span><span><i class="swatch gold"></i>压电执行器</span><span>点击高亮部件，查看说明</span></div></div>
+        <aside class="anatomy-notes"><div class="section-kicker">THREE ESSENTIALS <span id="revealCount">0 / 3</span></div>
+          <button class="component-card" data-part="supply"><span class="card-number">01</span><span><strong>墨水供应管道</strong><small>把墨水送进墨腔，维持连续供墨。</small></span><span class="card-dot"></span></button>
+          <button class="component-card" data-part="piezo"><span class="card-number">02</span><span><strong>压电陶瓷</strong><small>电信号引起微小形变，经腔壁改变墨腔容积。</small></span><span class="card-dot"></span></button>
+          <button class="component-card" data-part="nozzle"><span class="card-number">03</span><span><strong>喷嘴</strong><small>将瞬态压力转化为定向液柱，随后形成墨滴。</small></span><span class="card-dot"></span></button>
+          <div class="detail-box" id="partDetail" aria-live="polite"><span class="tiny-label">观察提示</span><p>先看完整的墨路：供应管道 → 墨腔 → 底部喷嘴。按「下一步」依次认识三个部件。</p></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="slide" id="slide2" aria-labelledby="title2" hidden>
+      <div class="slide-heading"><div><p class="eyebrow">02 / DROP FORMATION</p><h1 id="title2">一次形变，一滴墨。</h1><p class="subtitle">从补墨到断滴：观察腔体容积、压力扰动与液滴的协同变化。</p></div><span class="topic-pill">喷墨循环</span></div>
+      <div class="cycle-layout"><div class="visual-panel"><div class="panel-label"><span class="live-dot"></span> 动态剖面 <span>形变已夸张</span></div><div id="cycleDiagram" class="diagram-host"></div><div class="diagram-foot">连续供墨通路 · 示意单次按需喷射</div></div><aside class="cycle-notes"><div class="section-kicker">ONE DROP / FOUR MOMENTS</div><div id="stageList" class="stage-list"></div><div class="playback"><button class="play-toggle" data-play>暂停演示</button><span class="phase-time">循环约 8 秒 · 慢动作</span></div><p class="note">真实喷射发生在更短时间尺度；压力波传播、反射与液面运动被简化呈现。</p></aside></div>
+    </section>
+
+    <section class="slide" id="slide3" aria-labelledby="title3" hidden>
+      <div class="slide-heading"><div><p class="eyebrow">03 / DRIVE & RESPONSE</p><h1 id="title3">波形，是形变的节奏。</h1><p class="subtitle">电信号 → 压电形变 → 腔体容积变化 → 压力响应 → 液滴形成。</p></div><span class="topic-pill">驱动波形</span></div>
+      <div class="wave-layout"><div class="wave-column"><div class="visual-panel wave-panel"><div class="panel-label"><span class="live-dot"></span> 概念驱动信号 <span>幅值 / 时间均归一化</span></div>
+        <svg id="waveSvg" viewBox="0 0 800 330" role="img" aria-label="概念驱动信号，扩容、压缩、喷出过渡和恢复四个示意阶段，游标与喷墨循环同步">
+          <defs><linearGradient id="waveFill" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#44dcea" stop-opacity=".22"/><stop offset="1" stop-color="#44dcea" stop-opacity="0"/></linearGradient></defs>
+          <g class="chart-grid"><path d="M70 65H755 M70 120H755 M70 175H755 M70 230H755 M70 65V255 M241 65V255 M412 65V255 M583 65V255 M755 65V255"/></g>
+          <path class="chart-axis" d="M70 50V255H768"/><text x="70" y="30" class="axis-text">相对驱动量（非实际电压）</text><text x="665" y="292" class="axis-text">归一化时间 →</text><text x="40" y="180" class="axis-text">0</text>
+          <path d="M70 175L105 175L145 225L225 225L275 90L340 90L390 175L470 175L515 152L555 175L755 175L755 255H70Z" fill="url(#waveFill)"/>
+          <path class="wave-line" d="M70 175L105 175L145 225L225 225L275 90L340 90L390 175L470 175L515 152L555 175L755 175"/>
+          <g class="wave-labels"><text x="155" y="317">扩容示意</text><text x="326" y="317">压缩示意</text><text x="498" y="317">喷出 / 过渡</text><text x="669" y="317">恢复示意</text></g>
+          <g id="waveCursor"><path d="M70 55V259"/><circle cx="70" cy="175" r="6"/></g>
+        </svg>
+        <div class="wave-legend"><span><i class="swatch cyan"></i>概念驱动信号</span><span class="gold-text">│ 当前循环位置</span></div></div>
+        <div class="wave-warning"><span>!</span><p><strong>不是调机参数，也不是实测波形。</strong>不代表任何具体喷头的实际电压、极性或时序；高电压不等于必然喷墨。形变方向取决于喷头结构、安装约束和驱动极性。</p></div>
+      </div><aside class="response-panel"><div class="section-kicker">SYNCHRONIZED RESPONSE</div><div id="waveDiagram" class="diagram-host"></div><div class="response-stage"><span id="waveStageNumber">01 / 04</span><h2 id="waveStageTitle">补墨与扩容</h2><p id="waveStageDescription"></p></div><div class="playback"><button class="play-toggle" data-play>暂停演示</button><button id="nextStage" class="quiet-button">下一阶段 →</button></div></aside></div>
+    </section>
+
+    <footer class="deck-footer"><div class="footer-left"><span class="footer-line"></span><span id="footerHint">前进以逐步揭示结构</span></div><nav class="page-dots" aria-label="直接跳转幻灯片"><button data-page="0" class="current" aria-label="第1页 结构认识" aria-current="page">01</button><button data-page="1" aria-label="第2页 喷墨循环">02</button><button data-page="2" aria-label="第3页 驱动波形">03</button></nav><div class="navigation"><span id="pageNumber">01 / 03</span><button id="previous" aria-label="上一步" title="上一步 (←)">←</button><button id="next" class="next-button">下一步 <span>→</span></button></div></footer>
+  </main>
+  <div class="outside-hint">← → 翻页 / 逐步揭示 <span>·</span> F 全屏 <span>·</span> ? 帮助</div>
+  <dialog id="helpDialog"><form method="dialog"><button class="dialog-close" aria-label="关闭帮助">×</button><p class="eyebrow">PRESENTATION GUIDE</p><h2>让讲解，跟上你的节奏。</h2><dl><dt>→ / PageDown / Space</dt><dd>下一步；首页先揭示三个部件，再翻页</dd><dt>← / PageUp</dt><dd>上一步；首页依次收起部件</dd><dt>底部 01 / 02 / 03</dt><dd>直接跳页，不受揭示步骤限制</dd><dt>F</dt><dd>进入或退出全屏</dd><dt>?</dt><dd>打开帮助；Esc 关闭帮助或退出全屏</dd></dl><p class="note">点击部件查看说明；在后两页可暂停动画或选择阶段。遵循系统「减少动态效果」偏好，默认不自动播放。</p><button class="next-button">开始探索 →</button></form></dialog>
+  <div id="status" class="sr-only" aria-live="polite"></div>
+  <noscript>此演示需要启用 JavaScript 来显示 SVG 剖面及操作幻灯片。</noscript>
+</body>
+</html>

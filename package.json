@@ -1,0 +1,9 @@
+{
+  "name": "uv-printhead-classroom",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "零依赖 UV 喷头结构与波形中文动画演示",
+  "scripts": { "start": "node server.mjs", "check": "node --check server.mjs && node --check app.js" },
+  "engines": { "node": ">=18" }
+}
