@@ -9,6 +9,8 @@
     "legacy": "node server.mjs",
     "build": "slidev build slides.md --out dist",
     "test:browser": "node tests/browser.mjs",
+    "test:sidebar": "node tests/sidebar.mjs",
+    "test:production": "node tests/production.mjs",
     "check": "node tests/isoInkSurface.mjs && node tests/liquidFlow.mjs && node --check server.mjs && node --check app.js && node --check composables/motion.js && node --check composables/useInkCycle.js && npm run build"
   },
   "engines": {

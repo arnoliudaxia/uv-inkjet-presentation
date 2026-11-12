@@ -58,9 +58,15 @@ npm run check       # JS 语法检查 + 生产构建
 npm run build       # 静态输出 dist/
 npx vite preview --host 127.0.0.1 --port 3102
 TEST_URL=http://127.0.0.1:3000 npm run test:browser
+npm run test:sidebar    # 默认检查已有 3000 服务，逐页新浏览器上下文
+npm run test:production # base 子路径构建 + 临时静态服务 + 右栏及完整浏览器回归
 ```
 
 浏览器测试使用 `playwright-core` 与本机 Chrome，默认路径为 macOS Google Chrome。其他环境通过 `CHROME_PATH` 指定。测试不负责启动/关闭服务，默认目标为 3101，可通过 `TEST_URL` 修改。
+
+`test:production` 使用 `/uv-inkjet-presentation/` base，并模拟 Pages 深链接的 `404.html` 回退（HTTP 404），自动关闭自己的临时服务，不影响 3000。`test:sidebar` 检查第 1–7 页右栏及所有祖先的 display/visibility/opacity、文本及 bbox，第 5 页额外检查 `clicks=3` 的电极说明，第 8 页确认 finish 且无右栏；截图输出 `/tmp/uv-sidebar-production/page-{1..8}.png`。也可用 `TEST_URL=https://arnoliudaxia.github.io/uv-inkjet-presentation SCREENSHOT_DIR=/tmp/uv-sidebar-online npm run test:sidebar` 验证线上。
+
+右栏排查应检查真实 DOM 与匹配 CSS，不应全局覆盖 `body aside`，以免影响 Slidev 自身内容。此次对 a26eff0 线上版本的干净 Chrome 检查中，右栏 `aside` 未被移除，`.adv-sidebar` 为 `display:flex`，所有祖先可见；没有复现截图中的空白。若特定浏览器仍出现，请在该浏览器记录 matched CSS（含扩展注入样式）、浏览器版本和资源请求，不能据此断言是 Slidev 生产隐藏规则。
 
 部署 `dist/`，不要将开发服务暴露到公网。history 路由需要将未知路径回退到 `index.html`；构建包含 `404.html` 和 `_redirects`。不能直接双击 HTML 用 `file://` 打开。子路径部署可用 `npm run build -- --base /demo/`。
 
