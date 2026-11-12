@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { chromium } from 'playwright-core'
+import { testFinish } from './finish.mjs'
 
 const url = process.env.TEST_URL || 'http://127.0.0.1:3101'
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true })
@@ -8,13 +9,13 @@ try {
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
   async function go(number, clicks = 0) {
-    await page.goto(`${url}/${number}?clicks=${clicks}`)
+    await page.goto(`${url}/${number}${clicks ? `?clicks=${clicks}` : ''}`)
     await page.locator('.lesson-slide:visible h1').waitFor()
     await page.waitForTimeout(200)
   }
   const inkPalette = ['rgb(0, 166, 223)', 'rgb(230, 0, 126)', 'rgb(255, 213, 0)', 'rgb(64, 84, 220)']
-  const clickCounts = [1, 2, 2, 2, 3, 3, 0, 0, 2]
-  for (let number = 1; number <= 9; number++) {
+  const clickCounts = [1, 2, 0, 3, 3, 0, 0]
+  for (let number = 1; number <= 7; number++) {
     await go(number, clickCounts[number - 1])
     assert.equal(await page.locator('.lesson-slide:visible').count(), 1)
     const light = await page.locator('.lesson-slide:visible').evaluate(root => {
@@ -220,32 +221,37 @@ try {
       return { progress: Number(node.dataset.progress), area: Number(node.dataset.area), initial: Number(node.dataset.initialArea), final: Number(node.dataset.finalArea), heights: node.dataset.heights.split(',').map(Number), initialHeights: node.dataset.initialHeights.split(',').map(Number), polygonArea: Math.abs(twiceArea) / 2 }
     }))
     for (const s of samples) {
-      assert.equal(s.initial, 46800)
+      assert.ok(Math.abs(s.initial - 46800) < 1e-6)
       assert.equal(s.final, 46800)
-      assert.equal(s.initialHeights.reduce((a, b) => a + b) * 650 / 16, s.final, 'actual initial columns and final flat layer have identical volume')
+      assert.ok(Math.abs(s.initialHeights.reduce((a, b) => a + b) * 650 / s.initialHeights.length - s.final) < 1e-6, 'initial volume includes precursor film')
       assert.ok(Math.abs(s.area - 46800) < 1e-6, 'column area remains constant')
       assert.ok(Math.abs(s.polygonArea - 46800) < .1, 'actual rendered polygon conserves area')
-      assert.ok(s.heights.every(h => h >= 0 && h <= 144))
-      assert.ok(Math.abs(s.heights.reduce((a, b) => a + b) / 16 - 72) < 1e-6)
+      assert.ok(s.heights.every(h => h >= .35 - 1e-9 && h <= Math.max(...s.initialHeights)))
+      assert.ok(Math.abs(s.heights.reduce((a, b) => a + b) / s.heights.length - 72) < 1e-6)
     }
     return samples
   }
   const early = await sampleFlow()
   assert.ok(early.every(s => s.progress < .2))
-  assert.ok(early[0].heights[0] > 130 && early[0].heights[1] < 14)
-  assert.deepEqual(early[0].initialHeights, Array.from({ length: 16 }, (_, i) => i % 2 === 0 ? 144 : 0))
-  assert.equal(early[0].initialHeights.filter(h => h === 0).length, 8, 'multiple visible gaps fill during leveling')
+  assert.equal(early[0].initialHeights.length, 128)
+  assert.ok(Math.max(...early[0].heights) > 110 && Math.min(...early[0].heights) < 10)
+  assert.ok(early[0].initialHeights.filter(h => h === .35).length > 32, 'visible gaps above a thin wetting film')
   for (let i = 0; i < 4; i++) {
     await page.waitForTimeout(450)
     const mid = await sampleFlow()
     assert.ok(mid.every(s => s.progress > early[0].progress && s.progress < 1))
+    assert.ok(Math.max(...mid[0].heights) < Math.max(...early[0].heights))
+    assert.ok(Math.min(...mid[0].heights) > Math.min(...early[0].heights))
     if (i === 1) await page.screenshot({ path: '/tmp/uv-slidev-blocks-flow-mid.png' })
   }
-  await page.waitForTimeout(1000)
+  await page.waitForFunction(() => document.querySelector('.lesson-slide .flow-leveling')?.dataset.progress === '1')
   const settled = await sampleFlow()
-  assert.ok(settled.every(s => s.progress === 1 && s.heights.every(h => h === 72)))
-  assert.deepEqual(await flow.first().getAttribute('data-running'), 'false')
+  assert.ok(settled.every(s => s.progress === 1 && s.heights.every(h => Math.abs(h - 72) < .2)))
+  assert.equal(await flow.first().getAttribute('data-running'), 'true', 'loop remains running during settled hold')
   await page.screenshot({ path: '/tmp/uv-slidev-blocks-flow-settled.png' })
+  await page.waitForFunction(() => Number(document.querySelector('.lesson-slide .flow-leveling')?.dataset.progress) < .1)
+  assert.equal(await flow.getAttribute('data-running'), 'true')
+  assert.ok((await sampleFlow()).every(s => s.progress < .2), 'next cycle resets the conservative model')
   // Return to the original state and re-enter: a fresh conservative animation, not a cached end frame.
   await page.keyboard.press('ArrowLeft')
   await page.waitForTimeout(80)
@@ -254,6 +260,23 @@ try {
   await page.waitForTimeout(80)
   assert.ok((await sampleFlow()).every(s => s.progress < .1))
   await page.screenshot({ path: '/tmp/uv-slidev-blocks-flow-start.png' })
+  // Deterministic visibility event: hide cancels, show restarts without elapsed catch-up.
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  await page.waitForTimeout(40)
+  const pausedProgress = await flow.getAttribute('data-progress')
+  assert.equal(await flow.getAttribute('data-running'), 'false')
+  await page.waitForTimeout(150)
+  assert.equal(await flow.getAttribute('data-progress'), pausedProgress)
+  await page.evaluate(() => {
+    delete document.hidden
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  await page.waitForTimeout(80)
+  assert.equal(await flow.getAttribute('data-running'), 'true')
+  assert.ok(Number(await flow.getAttribute('data-progress')) < .1)
   // Page departure must cancel RAF even when Slidev retains a neighbouring slide instance.
   await page.keyboard.press('ArrowDown')
   await page.waitForURL(/\/3(?:\?|$)/)
@@ -269,8 +292,12 @@ try {
   assert.ok((await sampleFlow()).every(s => s.progress < .2))
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.waitForTimeout(80)
-  assert.ok((await sampleFlow()).every(s => s.progress === 1 && s.heights.every(h => h === 72)))
+  assert.ok((await sampleFlow()).every(s => s.progress === 1 && s.heights.every(h => Math.abs(h - 72) < .2)))
   assert.deepEqual(await flow.locator('polygon').evaluateAll(nodes => nodes.map(n => getComputedStyle(n).fill)), [inkPalette[0]])
+  assert.equal(await flow.getAttribute('data-running'), 'false', 'reduced motion never loops')
+  await page.waitForTimeout(1200)
+  assert.equal(await flow.getAttribute('data-progress'), '1')
+  assert.equal(await flow.getAttribute('data-running'), 'false')
   await page.keyboard.press('ArrowLeft')
   await page.keyboard.press('ArrowRight')
   await page.waitForTimeout(80)
@@ -350,37 +377,115 @@ try {
   await page.keyboard.press('ArrowRight')
   await page.waitForURL(/\/3(?:\?|$)/)
 
-  for (const clicks of [0, 1, 2]) {
-    await go(3, clicks)
-    const random = page.locator('.lesson-slide:visible .story-visual')
-    const fills = await random.locator('.story-dot').evaluateAll(nodes => [...new Set(nodes.map(node => getComputedStyle(node).fill))].filter(fill => fill !== 'none').sort())
-    assert.deepEqual(fills, [...inkPalette].sort(), 'random and continuous areas retain the same four saturated inks')
-    assert.ok(await random.locator('text').evaluateAll(nodes => nodes.every(node => {
-      const rgb = getComputedStyle(node).fill.match(/[\d.]+/g).slice(0, 3).map(Number)
-      return rgb.reduce((a, b) => a + b) / 3 < 130
-    })), 'random-mix labels stay dark and readable')
-    await page.screenshot({ path: `/tmp/uv-slidev-random-${clicks}.png` })
+  await go(3)
+  const random = page.locator('.lesson-slide:visible .random-ink-demo')
+  assert.equal(await random.locator('button, .story-step, .story-target, .story-foot, .story-progress').count(), 0)
+  assert.equal(await random.locator('.story-card').count(), 1)
+  const meshes = await random.locator('.ink-column').evaluateAll(columns => columns.map(column => {
+    const top = [...column.querySelectorAll('.plan-cell')].map(n => getComputedStyle(n).fill)
+    const faces = [...column.querySelectorAll('.iso-cell')]
+    const bottom = Array(96)
+    faces.forEach(n => { bottom[Number(n.dataset.cell)] = getComputedStyle(n).fill })
+    const svg = column.querySelector('.iso-ink-surface')
+    const box = svg.getBBox(), view = svg.viewBox.baseVal
+    return { top, bottom, heights: faces.flatMap(n => n.dataset.heights.split(',').map(Number)), bounded: box.x >= 0 && box.y >= 0 && box.x + box.width <= view.width && box.y + box.height <= view.height }
+  }))
+  for (const mesh of meshes) {
+    assert.equal(mesh.top.length, 96)
+    assert.deepEqual(mesh.bottom, mesh.top, '96 projected cells match their own plan by row/column')
+    assert.deepEqual([...new Set(mesh.top)].sort(), [...inkPalette].sort())
+    assert.ok(mesh.bounded, 'all projected geometry stays within SVG viewBox')
   }
+  assert.equal(new Set(meshes[0].heights).size, 1)
+  assert.ok(Math.max(...meshes[1].heights) - Math.min(...meshes[1].heights) > 30)
+  const staticMarkup = await random.innerHTML()
+  await page.waitForTimeout(1100)
+  assert.equal(await random.innerHTML(), staticMarkup, 'no automatic animation')
+  await page.screenshot({ path: '/tmp/uv-slidev-random-static.png' })
+  await page.keyboard.press('ArrowRight')
+  await page.waitForURL(/\/4(?:\?|$)/)
+  await page.locator('.lesson-slide:visible .anatomy-layout').waitFor()
+  assert.equal(await page.locator('.lesson-slide:visible .component-card.revealed').count(), 0)
+  await page.keyboard.press('ArrowLeft')
+  await page.waitForURL(/\/3(?:\?|$)/)
+  assert.equal(Number(new URL(page.url()).searchParams.get('clicks') || 0), 0)
+  assert.equal(await random.innerHTML(), staticMarkup)
+  await page.keyboard.press('ArrowLeft')
+  await page.waitForURL(/\/2(?:\?|$)/)
+  assert.equal(Number(new URL(page.url()).searchParams.get('clicks')), 2)
 
-  await go(5)
+  await go(4)
+  assert.equal(await page.locator('.lesson-slide:visible h1').innerText(), '先看喷头结构')
+  assert.ok((await page.locator('.lesson-slide:visible').innerText()).includes('整个喷头可以抽象为墨路、压电陶瓷、喷嘴三个部份'))
   const anatomy = page.locator('.anatomy-layout')
+  assert.equal(await anatomy.locator('.panel-label span').count(), 0)
   assert.equal(await anatomy.locator('.component-card.revealed').count(), 0)
+  assert.equal(await anatomy.locator('.detail-box').count(), 0)
+  const assembly = anatomy.locator('.anatomy-assembly')
+  const primitives = 'path,rect,circle,ellipse,line,polyline,polygon,text,image,use'
+  assert.equal(await assembly.locator(primitives).count(), 0, 'click 0 has no actual SVG primitives')
+  assert.equal(await anatomy.locator('.component-card:visible').count(), 0)
+  await page.screenshot({ path: '/tmp/uv-anatomy-click-0.png' })
   for (const [i, key] of ['ArrowRight', 'Space', 'ArrowRight'].entries()) {
     await page.keyboard.press(key)
-    await page.waitForTimeout(100)
-    assert.equal(await anatomy.locator('.component-card.revealed').count(), i + 1)
+    await page.waitForTimeout(80)
+    const modules = assembly.locator('.assembly-module')
+    assert.equal(await modules.count(), i + 1)
+    assert.equal(await assembly.locator('[data-part="nozzle"]').count(), i === 2 ? 1 : 0)
+    const moving = await modules.last().evaluate(el => ({
+      transform: getComputedStyle(el).transform,
+      duration: getComputedStyle(el).animationDuration,
+      entryX: getComputedStyle(el).getPropertyValue('--entry-x').trim(),
+      entryY: getComputedStyle(el).getPropertyValue('--entry-y').trim(),
+    }))
+    assert.notEqual(moving.transform, 'matrix(1, 0, 0, 1, 0, 0)', 'actual module enters from outside its final position')
+    assert.equal(moving.duration, '0.65s')
+    if (i === 2) {
+      assert.equal(moving.entryX, '0px')
+      assert.equal(moving.entryY, '145px')
+      const nozzle = assembly.locator('[data-part="nozzle"]')
+      assert.equal(await nozzle.locator('path').count(), 4)
+      assert.equal(await nozzle.locator('text').count(), 2, 'labels enter with the nozzle')
+      assert.equal(await nozzle.locator('.housing, .assembly-ink, .edge').count(), 3)
+    }
+    await page.waitForTimeout(700)
+    assert.deepEqual(await modules.evaluateAll(nodes => nodes.map(el => getComputedStyle(el).transform)), Array(i + 1).fill('matrix(1, 0, 0, 1, 0, 0)'))
+    assert.equal(await anatomy.locator('.component-card:visible').count(), i + 1)
+    assert.equal(await assembly.locator('.nozzle-module .nozzle-ink').count(), i + 1 >= 3 ? 1 : 0)
+    assert.equal(await assembly.locator('.supply-module .nozzle-ink').count(), 0)
+    assert.equal(await assembly.locator('.assembly-wall').count(), i >= 1 ? 1 : 0)
+    await page.screenshot({ path: `/tmp/uv-anatomy-click-${i + 1}.png` })
   }
-  await page.keyboard.press('ArrowLeft')
-  await page.waitForTimeout(100)
-  assert.equal(await anatomy.locator('.component-card.revealed').count(), 2)
+  const joins = await assembly.evaluate(svg => {
+    const box = selector => svg.querySelector(selector).getBBox()
+    const chamber = box('.supply-ink'), nozzle = box('.nozzle-ink'), wall = box('.assembly-wall')
+    return { chamberBottom: chamber.y + chamber.height, nozzleTop: nozzle.y, wallY: wall.y }
+  })
+  assert.equal(joins.chamberBottom, 330)
+  assert.equal(joins.nozzleTop, 329, 'ink overlaps at outlet to avoid antialiasing seam')
+  assert.equal(joins.wallY, 205)
+  for (const count of [2, 1, 0]) {
+    await page.keyboard.press('ArrowLeft')
+    await page.waitForTimeout(100)
+    assert.equal(await assembly.locator('.assembly-module').count(), count)
+    assert.equal(await assembly.locator('[data-part="nozzle"]').count(), 0)
+    assert.equal(await assembly.locator('.nozzle-ink').count(), count >= 3 ? 1 : 0)
+  }
+  assert.equal(await assembly.locator(primitives).count(), 0, 'back to zero removes all geometry')
+  await page.keyboard.press('ArrowRight')
+  await page.waitForTimeout(80)
+  assert.notEqual(await assembly.locator('.supply-module').evaluate(el => getComputedStyle(el).transform), 'matrix(1, 0, 0, 1, 0, 0)', 'forward replays assembly')
+  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('ArrowRight')
+  await page.waitForTimeout(750)
   await anatomy.locator('.component-card').nth(2).click()
-  assert.match(page.url(), /\/5(?:\?|$)/, 'part selection stays on anatomy slide 5')
+  assert.match(page.url(), /\/4(?:\?|$)/, 'part selection stays on anatomy slide 4')
   assert.equal(await anatomy.locator('.component-card.revealed').count(), 3)
   await page.locator('.lesson-slide:visible h1').click()
   await page.keyboard.press('ArrowRight')
-  await page.waitForURL(/\/6(?:\?|$)/)
+  await page.waitForURL(/\/5(?:\?|$)/)
 
-  await go(7)
+  await go(6)
   const wave = page.locator('.wave-layout')
   await wave.locator('.sync-stage-buttons button').nth(2).click()
   assert.match(await wave.locator('.play-toggle').innerText(), /播放/)
@@ -395,22 +500,50 @@ try {
   await wave.locator('.play-toggle').focus()
   await page.keyboard.press('Space')
   await page.waitForTimeout(200)
-  assert.match(page.url(), /\/7(?:\?|$)/, 'button Space does not navigate')
+  assert.match(page.url(), /\/6(?:\?|$)/, 'button Space does not navigate')
   assert.match(await wave.locator('.play-toggle').innerText(), /暂停/)
   assert.notEqual(await wall.getAttribute('d'), pullWall)
   await wave.locator('.sync-stage-buttons button').nth(1).click()
   assert.match(await wave.locator('.response-stage h2').innerText(), /保持/)
 
-  await go(8)
-  const parameter = page.locator('.adv-parameters')
-  for (let index = 0; index < 4; index++) {
-    await parameter.locator('.adv-tabs button').nth(index).click()
-    const before = await parameter.locator('.adv-wave').getAttribute('d')
-    await parameter.locator('input[type=range]').fill('90')
-    assert.notEqual(await parameter.locator('.adv-wave').getAttribute('d'), before)
+  async function assertStaticMetrology() {
+    const metrology = page.locator('.lesson-slide:visible .adv-metrology')
+    assert.equal(await metrology.count(), 1)
+    assert.equal(await page.locator('.lesson-slide:visible h1').innerText(), '最后，用表面形貌验证。')
+    assert.equal(await metrology.locator('.adv-explanation h2').innerText(), '平均值 ≠ 局部起伏')
+    assert.equal(await metrology.locator('.adv-explanation p').innerText(), '平均层厚需相对共同基底求取；截面的局部起伏用于观察不均匀，不能只用平均值代替。')
+    assert.equal(await metrology.locator('.adv-kicker').innerText(), '表面测量与反馈')
+    assert.equal(await metrology.locator('.adv-help, .adv-reveal, .is-hidden, [aria-hidden="true"]').count(), 0)
+    assert.doesNotMatch(await metrology.innerText(), /先看空间分布|复测才形成闭环|揭示截面|逆向收起|0\s*\/\s*2/)
+    assert.equal(await metrology.locator('.adv-profile').count(), 2)
+    for (const profile of await metrology.locator('.adv-profile').all()) {
+      assert.equal(await profile.isVisible(), true)
+      assert.equal(await profile.locator('.adv-wave').isVisible(), true)
+    }
+    assert.equal(await metrology.locator('.adv-loop').isVisible(), true)
+    assert.deepEqual(await metrology.locator('.adv-loop span').allTextContents(), ['测量', '修正工艺', '复测 ↺'])
+    assert.equal(await metrology.locator('.adv-specs h3').innerText(), '测量需求 · 待设备验证')
+    assert.deepEqual(await metrology.locator('.adv-specs dd').allTextContents(), ['约 1 μm', '≥ 100 μm', '大约 1 cm 级'])
+    assert.ok(await metrology.locator('*').evaluateAll(nodes => nodes.every(node => {
+      const style = getComputedStyle(node)
+      return style.animationName === 'none' && style.transitionDuration === '0s' && style.visibility === 'visible' && style.opacity === '1'
+    })), 'all metrology content is static and visible without advancing')
+    const markup = await metrology.innerHTML()
+    await page.waitForTimeout(350)
+    assert.equal(await metrology.innerHTML(), markup)
   }
-  await parameter.locator('.adv-reset').click()
-  assert.equal(await parameter.locator('input[type=range]').inputValue(), '50')
+  // Enter from the preceding slide: no additional clicks reveal the content.
+  await page.locator('.lesson-slide:visible h1').click()
+  await page.keyboard.press('ArrowRight')
+  await page.waitForURL(/\/7(?:\?|$)/)
+  await page.locator('.wave-layout').waitFor({ state: 'hidden' })
+  await assertStaticMetrology()
+  await page.keyboard.press('ArrowLeft')
+  await page.waitForURL(/\/6(?:\?|$)/)
+  await go(7)
+  assert.equal(new URL(page.url()).searchParams.has('clicks'), false)
+  await assertStaticMetrology()
+  await page.screenshot({ path: '/tmp/uv-slidev-metrology-static.png' })
   for (const viewport of [{ width: 810, height: 1080 }, { width: 1920, height: 1080 }]) {
     await page.setViewportSize(viewport)
     await page.mouse.move(2, viewport.height - 2)
@@ -430,13 +563,26 @@ try {
   await reduced.keyboard.press('ArrowLeft')
   await reduced.waitForTimeout(80)
   assert.equal(await reducedDrops.locator('.falling-drops').first().evaluate(node => getComputedStyle(node).opacity), '1')
-  await reduced.goto(`${url}/7`)
+  await reduced.goto(`${url}/4`)
+  await reduced.locator('.anatomy-assembly').waitFor()
+  assert.equal(await reduced.locator('.anatomy-assembly path').count(), 0)
+  for (let step = 1; step <= 3; step++) {
+    await reduced.keyboard.press('ArrowRight')
+    await reduced.waitForTimeout(80)
+    const modules = reduced.locator('.anatomy-assembly .assembly-module')
+    assert.equal(await modules.count(), step)
+    assert.deepEqual(await modules.evaluateAll(nodes => nodes.map(el => [getComputedStyle(el).animationName, getComputedStyle(el).transform])), Array.from({ length: step }, () => ['none', 'matrix(1, 0, 0, 1, 0, 0)']))
+    assert.equal(await reduced.locator('.anatomy-assembly .nozzle-ink').count(), step >= 3 ? 1 : 0)
+    assert.equal(await reduced.locator('.anatomy-assembly [data-part="nozzle"]').count(), step === 3 ? 1 : 0)
+  }
+  await reduced.goto(`${url}/6`)
   await reduced.locator('.wave-layout .play-toggle').waitFor()
   assert.match(await reduced.locator('.play-toggle').innerText(), /播放/)
   const initial = await reduced.locator('.chamber-wall').getAttribute('d')
   await reduced.waitForTimeout(250)
   assert.equal(await reduced.locator('.chamber-wall').getAttribute('d'), initial)
-  console.log(`Browser checks passed: ${url} (9 pages, droplet volumes/landing/reversal, block height ratios, layout, reveal, keyboard, pause, waveform, sliders, hidden UI, reduced motion)`)
+  await testFinish(browser, url)
+  console.log(`Browser checks passed: ${url} (8 pages, finish confetti/lifecycle/reduced motion, droplet volumes/landing/reversal, block height ratios, layout, reveal, keyboard, pause, waveform, metrology, hidden UI, reduced motion)`)
 } finally {
   await browser.close()
 }

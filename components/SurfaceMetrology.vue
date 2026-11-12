@@ -1,10 +1,6 @@
 <script setup>
-import { computed } from 'vue'
-import { useSlideContext } from '@slidev/client'
 import '../styles/advanced.css'
 
-const { $clicks } = useSlideContext()
-const step = computed(() => Math.max(0, Math.min(2, $clicks.value)))
 // Deterministic illustrative fields, not measurements or a calibration model.
 const columns = 28, rows = 16
 function height(x, y, after) {
@@ -32,8 +28,8 @@ const maps = [false, true].map(after => {
 <template>
   <div class="adv-root adv-metrology">
     <div class="adv-panel adv-metrology-visual">
-      <div class="adv-panel-head"><span>彩色高度图 → 同位置截面</span><span>固定生成 · 示意非数据</span></div>
-      <svg viewBox="0 0 850 475" role="img" :aria-label="`校准前后两幅示意高度图，共用相对高度色标。${step >= 1 ? '下方显示沿A—A线的截面与全图平均层厚参考线，校准后起伏较小，仅表示目标。' : ''}`">
+      <div class="adv-panel-head"> <span>示意 同位置截面</span></div>
+      <svg viewBox="0 0 850 475" role="img" aria-label="校准前后两幅示意高度图，共用相对高度色标。下方显示沿A—A线的截面与全图平均层厚参考线，校准后起伏较小，仅表示目标。">
         <g v-for="(map, index) in maps" :key="map.title" :transform="`translate(${55 + index * 410}, 0)`">
           <text x="0" y="32" class="adv-svg-text">{{ map.title }}</text>
           <g transform="translate(0, 52)">
@@ -42,7 +38,7 @@ const maps = [false, true].map(after => {
             <path d="M0 80H308" stroke="#fff" stroke-width="1.5" stroke-dasharray="6 5" />
             <text x="-22" y="85" class="adv-svg-muted">A</text><text x="316" y="85" class="adv-svg-muted">A′</text>
           </g>
-          <g class="adv-reveal" :class="{ 'is-hidden': step < 1 }" :aria-hidden="step < 1" transform="translate(0, 240)">
+          <g class="adv-profile" transform="translate(0, 240)">
             <text x="0" y="18" class="adv-svg-muted">A—A′ 截面 · 与上图同一高度场</text>
             <path d="M0 32V130H308" class="adv-axis" />
             <path :d="`M0 ${map.meanY}H308`" stroke="#efc575" stroke-width="1.5" stroke-dasharray="5 5" />
@@ -50,20 +46,19 @@ const maps = [false, true].map(after => {
             <text x="6" y="152" class="adv-svg-muted">共同基底参考</text><text x="238" y="152" class="adv-svg-muted">横向位置</text>
           </g>
         </g>
-        <g transform="translate(245, 441)"><rect v-for="(color, i) in palette" :key="color" :x="i * 32" width="33" height="10" :fill="color" /><text x="-80" y="11" class="adv-svg-muted">相对低</text><text x="274" y="11" class="adv-svg-muted">相对高</text></g>
+        <g transform="translate(245, 441)"><rect v-for="(color, i) in palette" :key="color" :x="i * 32" width="33" height="10" :fill="color" /><text x="-80" y="11" class="adv-svg-muted">低</text><text x="274" y="11" class="adv-svg-muted">高</text></g>
       </svg>
-      <div class="adv-caption"><span class="adv-line-key" />截面高度 <span class="adv-line-key adv-mean-key" />全图平均层厚参考 <span>共用色标 / 无物理标尺</span></div>
-      <div class="adv-loop adv-reveal" :class="{ 'is-hidden': step < 2 }" :aria-hidden="step < 2"><span>测量</span><b>→</b><span>比较目标</span><b>→</b><span>修正工艺</span><b>→</b><span>复测 ↺</span></div>
+      <div class="adv-caption"><span class="adv-line-key" />截面高度 <span class="adv-line-key adv-mean-key" />全图平均层厚参考</div>
+      <div class="adv-loop"><span>测量</span><b>→</b><span>修正工艺</span><b>→</b><span>复测 ↺</span></div>
     </div>
     <aside class="adv-sidebar adv-metrology-notes">
-      <div class="adv-kicker">表面测量与反馈 <span>{{ step }} / 2</span></div>
-      <div class="adv-explanation" aria-live="polite">
-        <h2>{{ ['先看空间分布', '平均值 ≠ 局部起伏', '复测才形成闭环'][step] }}</h2>
-        <p>{{ ['同一色标比较两种目标状态。校准后更均匀只是教学示意，不是已验证的改善效果。', '平均层厚需相对共同基底求取；截面的局部起伏用于观察不均匀，不能只用平均值代替。', '测量偏差反馈到沉积、波形或运动工艺，再复测验证；不预设某个参数必然改善表面。'][step] }}</p>
+      <div class="adv-kicker">表面测量与反馈</div>
+      <div class="adv-explanation">
+        <h2>平均值 ≠ 局部起伏</h2>
+        <p>平均层厚需相对共同基底求取；截面的局部起伏用于观察不均匀，不能只用平均值代替。</p>
       </div>
-      <div class="adv-specs"><h3>测量需求 · 待设备验证</h3><dl><div><dt>横向分辨率</dt><dd>约 1 μm</dd></div><div><dt>高度分辨率</dt><dd>待定</dd></div><div><dt>Z 量程</dt><dd>≥ 100 μm</dd></div><div><dt>视场</dt><dd>待定</dd></div></dl></div>
-      <div class="adv-methods"><h3>候选方法</h3><p>共聚焦 / 白光干涉 / 色散共焦</p><small>结合材料反射、透明性、坡度与速度选型；分辨率不等于准确度。AFM 的量程与视场依设备，不能默认适合。</small></div>
-      <p class="adv-help">示意非数据 · 轮廓与均值由同一固定模型生成<br>→ 揭示截面 → 闭环 · ← 可逆向收起</p>
+      <div class="adv-specs"><h3>测量需求 · 待设备验证</h3><dl><div><dt>分辨率</dt><dd>约 1 μm</dd></div><div><dt>Z 量程</dt><dd>≥ 100 μm</dd></div><div><dt>视场</dt><dd>大约 1 cm 级</dd></div></dl></div>
+      <div class="adv-methods"><h3>候选方法</h3><p>共聚焦 / 白光干涉 / 色散共焦</p><small></small></div>
     </aside>
   </div>
 </template>

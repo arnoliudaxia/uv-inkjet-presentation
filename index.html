@@ -35,17 +35,17 @@
 
     <section class="slide" id="slide3" aria-labelledby="title3" hidden>
       <div class="slide-heading"><div><p class="eyebrow">03 / DRIVE & RESPONSE</p><h1 id="title3">波形，是形变的节奏。</h1><p class="subtitle">电信号 → 压电形变 → 腔体容积变化 → 压力响应 → 液滴形成。</p></div><span class="topic-pill">驱动波形</span></div>
-      <div class="wave-layout"><div class="wave-column"><div class="visual-panel wave-panel"><div class="panel-label"><span class="live-dot"></span> 概念驱动信号 <span>幅值 / 时间均归一化</span></div>
-        <svg id="waveSvg" viewBox="0 0 800 330" role="img" aria-label="概念驱动信号，扩容、压缩、喷出过渡和恢复四个示意阶段，游标与喷墨循环同步">
+      <div class="wave-layout"><div class="wave-column"><div class="visual-panel wave-panel"><div class="panel-label"><span class="live-dot"></span> 波形信号 <span>幅值 / 时间均归一化</span></div>
+        <svg id="waveSvg" viewBox="0 0 800 330" role="img" aria-label="波形信号，扩容、压缩、喷出过渡和恢复四个示意阶段，游标与喷墨循环同步">
           <defs><linearGradient id="waveFill" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#44dcea" stop-opacity=".22"/><stop offset="1" stop-color="#44dcea" stop-opacity="0"/></linearGradient></defs>
           <g class="chart-grid"><path d="M70 65H755 M70 120H755 M70 175H755 M70 230H755 M70 65V255 M241 65V255 M412 65V255 M583 65V255 M755 65V255"/></g>
-          <path class="chart-axis" d="M70 50V255H768"/><text x="70" y="30" class="axis-text">相对驱动量（非实际电压）</text><text x="665" y="292" class="axis-text">归一化时间 →</text><text x="40" y="180" class="axis-text">0</text>
+          <path class="chart-axis" d="M70 50V255H768"/><text x="70" y="30" class="axis-text">相对驱动量（非实际电压）</text><text x="665" y="292" class="axis-text">时间(微秒) →</text><text x="40" y="180" class="axis-text">0</text>
           <path d="M70 175L105 175L145 225L225 225L275 90L340 90L390 175L470 175L515 152L555 175L755 175L755 255H70Z" fill="url(#waveFill)"/>
           <path class="wave-line" d="M70 175L105 175L145 225L225 225L275 90L340 90L390 175L470 175L515 152L555 175L755 175"/>
           <g class="wave-labels"><text x="155" y="317">扩容示意</text><text x="326" y="317">压缩示意</text><text x="498" y="317">喷出 / 过渡</text><text x="669" y="317">恢复示意</text></g>
           <g id="waveCursor"><path d="M70 55V259"/><circle cx="70" cy="175" r="6"/></g>
         </svg>
-        <div class="wave-legend"><span><i class="swatch cyan"></i>概念驱动信号</span><span class="gold-text">│ 当前循环位置</span></div></div>
+        <div class="wave-legend"><span><i class="swatch cyan"></i>波形信号</span><span class="gold-text">│ 当前循环位置</span></div></div>
         <div class="wave-warning"><span>!</span><p><strong>不是调机参数，也不是实测波形。</strong>不代表任何具体喷头的实际电压、极性或时序；高电压不等于必然喷墨。形变方向取决于喷头结构、安装约束和驱动极性。</p></div>
       </div><aside class="response-panel"><div class="section-kicker">SYNCHRONIZED RESPONSE</div><div id="waveDiagram" class="diagram-host"></div><div class="response-stage"><span id="waveStageNumber">01 / 04</span><h2 id="waveStageTitle">补墨与扩容</h2><p id="waveStageDescription"></p></div><div class="playback"><button class="play-toggle" data-play>暂停演示</button><button id="nextStage" class="quiet-button">下一阶段 →</button></div></aside></div>
     </section>
