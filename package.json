@@ -3,7 +3,23 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "零依赖 UV 喷头结构与波形中文动画演示",
-  "scripts": { "start": "node server.mjs", "check": "node --check server.mjs && node --check app.js" },
-  "engines": { "node": ">=18" }
+  "description": "Slidev UV 喷头结构、喷墨循环与概念波形中文动画演示",
+  "scripts": {
+    "start": "NODE_ENV=development slidev slides.md --port 3000",
+    "legacy": "node server.mjs",
+    "build": "slidev build slides.md --out dist",
+    "test:browser": "node tests/browser.mjs",
+    "check": "node --check server.mjs && node --check app.js && node --check composables/motion.js && node --check composables/useInkCycle.js && npm run build"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "dependencies": {
+    "@slidev/cli": "^53.1.0",
+    "@slidev/theme-default": "^0.25.0",
+    "vue": "^3.5.45"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.65.0"
+  }
 }
