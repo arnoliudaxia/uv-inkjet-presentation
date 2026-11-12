@@ -16,16 +16,26 @@ try {
   const tap = async name => { await page.getByRole('button', { name, exact: true }).tap(); await page.waitForTimeout(200) }
   await go(1)
   assert.equal(await page.getByRole('button', { name: '上一步', exact: true }).isDisabled(), true)
-  await tap('下一步'); assert.deepEqual(state(), ['/1', 1])
   await tap('下一步'); assert.deepEqual(state(), ['/2', 0])
-  await tap('上一步'); assert.deepEqual(state(), ['/1', 1])
+  await tap('下一步'); assert.deepEqual(state(), ['/2', 1])
+  await tap('下一步'); assert.deepEqual(state(), ['/3', 0])
+  await tap('上一步'); assert.deepEqual(state(), ['/2', 1])
+  await tap('上一步'); assert.deepEqual(state(), ['/2', 0])
   await tap('上一步'); assert.deepEqual(state(), ['/1', 0])
 
   for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(viewport)
     const portrait = viewport.height > viewport.width
-    for (let n = 1; n <= 8; n++) {
-      for (let clicks = 0; clicks <= [1, 2, 0, 3, 3, 0, 0, 0][n - 1]; clicks++) {
+    await go(1)
+    for (const target of [2, 3, 4, 5, 6, 8]) {
+      await page.locator(`.lesson-slide:visible .outline-card[data-page="${target}"]`).tap()
+      await page.waitForURL(new RegExp(`/${target}(?:\\?|$)`))
+      assert.deepEqual(state(), [`/${target}`, 0])
+      await page.goBack()
+      await page.waitForURL(/\/1(?:\?|$)/)
+    }
+    for (let n = 1; n <= 9; n++) {
+      for (let clicks = 0; clicks <= [0, 1, 2, 0, 3, 3, 0, 0, 0][n - 1]; clicks++) {
         await go(n, clicks)
         const result = await page.evaluate(() => {
           const content = document.querySelector('#slide-content')
@@ -49,37 +59,39 @@ try {
         assert.ok(result.box.left >= -1 && result.box.top >= -1 && result.box.right <= viewport.width + 1 && result.box.bottom <= viewport.height + 1)
         assert.ok(Math.abs(result.scale - Math.min(748 / 1440, 390 / 810)) < .00001, 'single native Slidev scale')
         assert.equal(await page.locator('#slide-container nav:visible').count(), 0)
-        if ([1, 3, 6, 8].includes(n) && clicks === 0)
+        if ([1, 2, 4, 7, 9].includes(n) && clicks === 0)
           await page.screenshot({ path: `/tmp/uv-mobile-${portrait ? 'portrait' : 'landscape'}-${n}.png` })
       }
     }
     assert.equal(await page.getByRole('button', { name: '下一步', exact: true }).isDisabled(), true)
-    await tap('上一步'); assert.deepEqual(state(), ['/7', 0])
+    await tap('上一步'); assert.deepEqual(state(), ['/8', 0])
   }
   // Orientation/visual viewport updates without remounting or resetting clicks.
-  await go(1, 1)
+  await go(2, 1)
   for (const viewport of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(viewport)
     await page.waitForTimeout(300)
-    assert.deepEqual(state(), ['/1', 1])
+    assert.deepEqual(state(), ['/2', 1])
     assert.equal(await page.locator('html').evaluate(e => e.classList.contains('mobile-deck-portrait')), viewport.width < viewport.height)
   }
   // Existing teaching controls remain touch-operable, without navigation.
-  await go(6)
+  await go(7)
   const play = page.locator('.lesson-slide:visible .play-toggle')
   const before = await play.innerText()
   await play.tap(); await page.waitForTimeout(100)
   assert.notEqual(await play.innerText(), before)
-  assert.deepEqual(state(), ['/6', 0])
+  assert.deepEqual(state(), ['/7', 0])
   // Physical-coordinate swipes must not trigger Slidev's default navigation.
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 600, y: 80 }] })
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 300, y: 80 }] })
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
   await page.waitForTimeout(200)
-  assert.deepEqual(state(), ['/6', 0])
+  assert.deepEqual(state(), ['/7', 0])
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await go(8)
+  await go(9)
+  assert.equal(await page.locator('.finish-slide:visible').getAttribute('data-running'), 'false')
+  assert.equal(await page.locator('.finish-slide:visible').getAttribute('data-rounds'), '0')
   assert.equal(await page.locator('.mobile-next').evaluate(e => getComputedStyle(e).animationName), 'none')
 
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 810 }, hasTouch: false })
@@ -93,8 +105,9 @@ try {
     const scale = await desktop.locator('#slide-content').evaluate(e => Number(getComputedStyle(e).getPropertyValue('--slidev-slide-scale')))
     assert.ok(Math.abs(scale - Math.min(viewport.width / 1440, viewport.height / 810)) < .00001)
     await desktop.keyboard.press('ArrowRight'); await desktop.waitForTimeout(150)
-    assert.equal(new URL(desktop.url()).searchParams.get('clicks'), '1')
+    assert.equal(new URL(desktop.url()).pathname, '/2')
+    assert.equal(Number(new URL(desktop.url()).searchParams.get('clicks')), 0)
   }
   assert.deepEqual(errors, [])
-  console.log('Mobile: all 8 slides/all click states, rails/bounds, touch steps, finish guard, resize, desktop and reduced motion passed')
+  console.log('Mobile: all 9 slides/all click states, rails/bounds, touch steps, finish guard, resize, desktop and reduced motion passed')
 } finally { await browser.close() }

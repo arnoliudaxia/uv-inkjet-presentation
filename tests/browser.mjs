@@ -14,8 +14,8 @@ try {
     await page.waitForTimeout(200)
   }
   const inkPalette = ['rgb(0, 166, 223)', 'rgb(230, 0, 126)', 'rgb(255, 213, 0)', 'rgb(64, 84, 220)']
-  const clickCounts = [1, 2, 0, 3, 3, 0, 0]
-  for (let number = 1; number <= 7; number++) {
+  const clickCounts = [0, 1, 2, 0, 3, 3, 0, 0]
+  for (let number = 1; number <= 8; number++) {
     await go(number, clickCounts[number - 1])
     assert.equal(await page.locator('.lesson-slide:visible').count(), 1)
     const light = await page.locator('.lesson-slide:visible').evaluate(root => {
@@ -23,7 +23,7 @@ try {
         const rgb = color.match(/[\d.]+/g).slice(0, 3).map(Number)
         return rgb.reduce((sum, channel) => sum + channel, 0) / 3
       }
-      const panel = root.querySelector('.droplet-visual, .story-visual, .visual-panel, .adv-panel')
+      const panel = root.querySelector('.outline-grid, .droplet-visual, .story-visual, .visual-panel, .adv-panel')
       return {
         scheme: getComputedStyle(document.documentElement).colorScheme,
         body: luminance(getComputedStyle(document.body).backgroundColor),
@@ -65,6 +65,22 @@ try {
   }
 
   await go(1)
+  assert.equal(await page.locator('.lesson-slide:visible h1').innerText(), '演示大纲')
+  const outline = page.locator('.lesson-slide:visible .outline-card')
+  assert.deepEqual(await outline.allTextContents().then(texts => texts.map(t => t.trim().replace(/^\d+\s*/, ''))), ['液滴体积与层高差异', '抽点补偿与流动补缺', '随机混色与局部起伏', '喷头结构', '驱动波形与液滴喷射', '表面形貌测量'])
+  for (const target of [2, 3, 4, 5, 6, 8]) {
+    await page.locator(`.lesson-slide:visible .outline-card[data-page="${target}"]`).click()
+    await page.waitForURL(new RegExp(`/${target}(?:\\?|$)`))
+    assert.equal(Number(new URL(page.url()).searchParams.get('clicks')), 0)
+    await page.goBack()
+    await page.waitForURL(/\/1(?:\?|$)/)
+  }
+  await page.locator('.lesson-slide:visible h1').click()
+  await page.keyboard.press('ArrowRight')
+  await page.waitForURL(/\/2(?:\?|$)/)
+  await page.keyboard.press('ArrowLeft')
+  await page.waitForURL(/\/1(?:\?|$)/)
+  await go(2)
   const drops = page.locator('.lesson-slide:visible .droplet-layer')
   assert.equal(await drops.locator('[data-explanation]').count(), 1)
   assert.equal(await drops.locator('button, .story-step, .topic-pill').count(), 0)
@@ -100,7 +116,7 @@ try {
   await page.keyboard.press('ArrowRight')
   await page.waitForTimeout(1100)
   await assertDropState(true)
-  assert.match(page.url(), /\/1(?:\?|$)/)
+  assert.match(page.url(), /\/2(?:\?|$)/)
   assert.deepEqual(await drops.locator('.deposited-layer').evaluateAll(nodes => nodes.map(node => getComputedStyle(node).transform)), Array(4).fill('matrix(1, 0, 0, 1, 0, 0)'))
   await page.screenshot({ path: '/tmp/uv-slidev-droplets-landed.png' })
   await page.keyboard.press('ArrowLeft')
@@ -110,11 +126,11 @@ try {
   await page.waitForTimeout(1100)
   await assertDropState(true)
   await page.keyboard.press('ArrowRight')
-  await page.waitForURL(/\/2(?:\?|$)/)
+  await page.waitForURL(/\/3(?:\?|$)/)
   await page.waitForTimeout(250)
   assert.match(await page.locator('.lesson-slide:visible h1').innerText(), /同样的层数/)
 
-  await go(2)
+  await go(3)
   assert.equal(await page.locator('.lesson-slide:visible h1').innerText(), '同样的层数高度不同')
   const blocks = page.locator('.lesson-slide:visible [data-ink]')
   const geometry = await blocks.evaluateAll(groups => groups.map(group => {
@@ -279,16 +295,16 @@ try {
   assert.ok(Number(await flow.getAttribute('data-progress')) < .1)
   // Page departure must cancel RAF even when Slidev retains a neighbouring slide instance.
   await page.keyboard.press('ArrowDown')
-  await page.waitForURL(/\/3(?:\?|$)/)
+  await page.waitForURL(/\/4(?:\?|$)/)
   const hiddenFlow = page.locator('.flow-leveling')
   const stopped = await hiddenFlow.evaluateAll(nodes => nodes.map(n => [n.dataset.progress, n.dataset.running]))
   assert.ok(stopped.every(([, running]) => running === 'false'))
   await page.waitForTimeout(200)
   assert.deepEqual(await hiddenFlow.evaluateAll(nodes => nodes.map(n => [n.dataset.progress, n.dataset.running])), stopped)
   await page.keyboard.press('ArrowUp')
-  await page.waitForURL(/\/2(?:\?|$)/)
+  await page.waitForURL(/\/3(?:\?|$)/)
   // Direct links also replay the middle stage.
-  await go(2, 1)
+  await go(3, 1)
   assert.ok((await sampleFlow()).every(s => s.progress < .2))
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.waitForTimeout(80)
@@ -369,15 +385,15 @@ try {
   assert.equal(await blocks.locator('.story-number').count(), 4)
   assert.equal(await page.locator('.lesson-slide:visible h1').innerText(), '同样的层数高度不同')
   assert.equal(await page.locator('.lesson-slide:visible .story-notes').innerText(), '通过测量高度，计算补偿比例。')
-  await go(2, 2)
+  await go(3, 2)
   assert.deepEqual(await blocks.locator('.story-number').allTextContents(), ['0.50', '0.50', '0.50', '0.50'])
   assert.deepEqual(await blocks.locator('.compensation-mask').evaluateAll(groups => groups.map(group => group.innerHTML)), mask.map(group => group.markup), 'fixed masks are deterministic')
 
   await page.locator('.lesson-slide:visible h1').click()
   await page.keyboard.press('ArrowRight')
-  await page.waitForURL(/\/3(?:\?|$)/)
+  await page.waitForURL(/\/4(?:\?|$)/)
 
-  await go(3)
+  await go(4)
   const random = page.locator('.lesson-slide:visible .random-ink-demo')
   assert.equal(await random.locator('button, .story-step, .story-target, .story-foot, .story-progress').count(), 0)
   assert.equal(await random.locator('.story-card').count(), 1)
@@ -403,18 +419,18 @@ try {
   assert.equal(await random.innerHTML(), staticMarkup, 'no automatic animation')
   await page.screenshot({ path: '/tmp/uv-slidev-random-static.png' })
   await page.keyboard.press('ArrowRight')
-  await page.waitForURL(/\/4(?:\?|$)/)
+  await page.waitForURL(/\/5(?:\?|$)/)
   await page.locator('.lesson-slide:visible .anatomy-layout').waitFor()
   assert.equal(await page.locator('.lesson-slide:visible .component-card.revealed').count(), 0)
   await page.keyboard.press('ArrowLeft')
-  await page.waitForURL(/\/3(?:\?|$)/)
+  await page.waitForURL(/\/4(?:\?|$)/)
   assert.equal(Number(new URL(page.url()).searchParams.get('clicks') || 0), 0)
   assert.equal(await random.innerHTML(), staticMarkup)
   await page.keyboard.press('ArrowLeft')
-  await page.waitForURL(/\/2(?:\?|$)/)
+  await page.waitForURL(/\/3(?:\?|$)/)
   assert.equal(Number(new URL(page.url()).searchParams.get('clicks')), 2)
 
-  await go(4)
+  await go(5)
   assert.equal(await page.locator('.lesson-slide:visible h1').innerText(), '先看喷头结构')
   assert.ok((await page.locator('.lesson-slide:visible').innerText()).includes('整个喷头可以抽象为墨路、压电陶瓷、喷嘴三个部份'))
   const anatomy = page.locator('.anatomy-layout')
@@ -479,13 +495,13 @@ try {
   await page.keyboard.press('ArrowRight')
   await page.waitForTimeout(750)
   await anatomy.locator('.component-card').nth(2).click()
-  assert.match(page.url(), /\/4(?:\?|$)/, 'part selection stays on anatomy slide 4')
+  assert.match(page.url(), /\/5(?:\?|$)/, 'part selection stays on anatomy slide 5')
   assert.equal(await anatomy.locator('.component-card.revealed').count(), 3)
   await page.locator('.lesson-slide:visible h1').click()
   await page.keyboard.press('ArrowRight')
-  await page.waitForURL(/\/5(?:\?|$)/)
+  await page.waitForURL(/\/6(?:\?|$)/)
 
-  await go(6)
+  await go(7)
   const wave = page.locator('.wave-layout')
   await wave.locator('.sync-stage-buttons button').nth(2).click()
   assert.match(await wave.locator('.play-toggle').innerText(), /播放/)
@@ -500,7 +516,7 @@ try {
   await wave.locator('.play-toggle').focus()
   await page.keyboard.press('Space')
   await page.waitForTimeout(200)
-  assert.match(page.url(), /\/6(?:\?|$)/, 'button Space does not navigate')
+  assert.match(page.url(), /\/7(?:\?|$)/, 'button Space does not navigate')
   assert.match(await wave.locator('.play-toggle').innerText(), /暂停/)
   assert.notEqual(await wall.getAttribute('d'), pullWall)
   await wave.locator('.sync-stage-buttons button').nth(1).click()
@@ -535,12 +551,12 @@ try {
   // Enter from the preceding slide: no additional clicks reveal the content.
   await page.locator('.lesson-slide:visible h1').click()
   await page.keyboard.press('ArrowRight')
-  await page.waitForURL(/\/7(?:\?|$)/)
+  await page.waitForURL(/\/8(?:\?|$)/)
   await page.locator('.wave-layout').waitFor({ state: 'hidden' })
   await assertStaticMetrology()
   await page.keyboard.press('ArrowLeft')
-  await page.waitForURL(/\/6(?:\?|$)/)
-  await go(7)
+  await page.waitForURL(/\/7(?:\?|$)/)
+  await go(8)
   assert.equal(new URL(page.url()).searchParams.has('clicks'), false)
   await assertStaticMetrology()
   await page.screenshot({ path: '/tmp/uv-slidev-metrology-static.png' })
@@ -553,7 +569,7 @@ try {
   assert.deepEqual(errors, [], 'no browser runtime errors')
 
   const reduced = await browser.newPage({ reducedMotion: 'reduce' })
-  await reduced.goto(`${url}/1`)
+  await reduced.goto(`${url}/2`)
   const reducedDrops = reduced.locator('.droplet-layer')
   await reducedDrops.waitFor()
   await reduced.keyboard.press('ArrowRight')
@@ -563,7 +579,7 @@ try {
   await reduced.keyboard.press('ArrowLeft')
   await reduced.waitForTimeout(80)
   assert.equal(await reducedDrops.locator('.falling-drops').first().evaluate(node => getComputedStyle(node).opacity), '1')
-  await reduced.goto(`${url}/4`)
+  await reduced.goto(`${url}/5`)
   await reduced.locator('.anatomy-assembly').waitFor()
   assert.equal(await reduced.locator('.anatomy-assembly path').count(), 0)
   for (let step = 1; step <= 3; step++) {
@@ -575,14 +591,14 @@ try {
     assert.equal(await reduced.locator('.anatomy-assembly .nozzle-ink').count(), step >= 3 ? 1 : 0)
     assert.equal(await reduced.locator('.anatomy-assembly [data-part="nozzle"]').count(), step === 3 ? 1 : 0)
   }
-  await reduced.goto(`${url}/6`)
+  await reduced.goto(`${url}/7`)
   await reduced.locator('.wave-layout .play-toggle').waitFor()
   assert.match(await reduced.locator('.play-toggle').innerText(), /播放/)
   const initial = await reduced.locator('.chamber-wall').getAttribute('d')
   await reduced.waitForTimeout(250)
   assert.equal(await reduced.locator('.chamber-wall').getAttribute('d'), initial)
   await testFinish(browser, url)
-  console.log(`Browser checks passed: ${url} (8 pages, finish confetti/lifecycle/reduced motion, droplet volumes/landing/reversal, block height ratios, layout, reveal, keyboard, pause, waveform, metrology, hidden UI, reduced motion)`)
+  console.log(`Browser checks passed: ${url} (9 pages, outline links/back navigation, finish confetti/lifecycle/reduced motion, droplet volumes/landing/reversal, block height ratios, layout, reveal, keyboard, pause, waveform, metrology, hidden UI, reduced motion)`)
 } finally {
   await browser.close()
 }

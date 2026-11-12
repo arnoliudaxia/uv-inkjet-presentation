@@ -89,7 +89,7 @@ onMounted(() => {
   media.addEventListener('change', updateReduced)
   document.addEventListener('visibilitychange', updateVisibility)
   window.addEventListener('resize', resize)
-  stopWatch = watch(() => $page.value === 8 && $nav.value.currentSlideNo === $page.value
+  stopWatch = watch(() => $nav.value.currentSlideNo === $page.value
     && $renderContext.value === 'slide' && visible.value && !reduced.value,
   play, { immediate: true, flush: 'sync' })
 })

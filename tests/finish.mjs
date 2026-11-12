@@ -4,10 +4,10 @@ export async function testFinish(browser, url) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 810 }, deviceScaleFactor: 3 })
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
-  await page.goto(`${url}/7`)
+  await page.goto(`${url}/8`)
   await page.locator('.lesson-slide:visible h1').waitFor()
   await page.keyboard.press('ArrowRight')
-  await page.waitForURL(/\/8(?:\?|$)/)
+  await page.waitForURL(/\/9(?:\?|$)/)
   const finish = page.locator('.finish-slide:visible')
   const active = () => page.waitForFunction(() => {
     const el = document.querySelector('.finish-slide[data-running="true"]')
@@ -37,13 +37,13 @@ export async function testFinish(browser, url) {
   assert.equal(await finish.getAttribute('data-particles'), '0')
   await page.screenshot({ path: '/tmp/uv-slidev-finish-still.png', scale: 'css' })
   await page.keyboard.press('ArrowLeft')
-  await page.waitForURL(/\/7(?:\?|$)/)
+  await page.waitForURL(/\/8(?:\?|$)/)
   await page.keyboard.press('ArrowRight')
   await active()
   // Retain a reference even if Slidev unmounts the leaving slide.
   await finish.evaluate(el => { window.__finish = el })
   await page.keyboard.press('ArrowLeft')
-  await page.waitForURL(/\/7(?:\?|$)/)
+  await page.waitForURL(/\/8(?:\?|$)/)
   await page.waitForTimeout(150)
   assert.equal(await page.evaluate(() => window.__finish.dataset.running), 'false')
   assert.equal(await page.evaluate(() => window.__finish.dataset.particles), '0')
