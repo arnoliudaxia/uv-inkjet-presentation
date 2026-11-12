@@ -16,7 +16,7 @@ function isolate(html: string) {
 // localhost default, without enabling Slidev's remote-control mode.
 export default defineConfig({
   plugins: [{
-    name: 'legacy-isolation-and-loopback',
+    name: 'legacy-isolation-and-lan',
     enforce: 'pre',
     load(id) {
       // Slidev also auto-imports root styles.css; do not mix the legacy sheet
@@ -24,8 +24,8 @@ export default defineConfig({
       if (id.split('?')[0] === new URL('./styles.css', import.meta.url).pathname) return ''
     },
     // CLI inline config wins over top-level server.host; a config hook runs
-    // after that merge and explicitly pins IPv4 loopback.
-    config() { return { server: { host: '127.0.0.1', strictPort: true } } },
+    // after that merge and enables access from devices on the local network.
+    config() { return { server: { host: '0.0.0.0', strictPort: true } } },
     transformIndexHtml: { order: 'pre', handler: isolate },
     configureServer(server) {
       // Slidev serves its generated dev HTML directly, bypassing Vite's HTML
@@ -40,6 +40,6 @@ export default defineConfig({
       })
     },
   }],
-  server: { host: '127.0.0.1', strictPort: true },
+  server: { host: '0.0.0.0', strictPort: true },
   preview: { host: '127.0.0.1', strictPort: true },
 })

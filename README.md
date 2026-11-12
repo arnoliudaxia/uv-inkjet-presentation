@@ -15,6 +15,14 @@ npm start
 
 画布 1440×810，按视口等比缩放。非 16:9 视口会留浅色边，避免拉伸/裁切；推荐横屏或投屏。隐藏 Slidev 工具栏、品牌、页码与帮助按钮，仅保留播放、阶段定位等教学控件。
 
+## 手机模式（先本地调试）
+
+触屏/粗指针设备且视口短边不超过 600 CSS px 时启用手机模式：竖屏将**页面内容顺时针旋转 90°**模拟横屏，真实横屏恢复正常方向；桌面窄窗口不会强制旋转。这不是系统 orientation lock，不调用屏幕方向锁定 API。1440×810 画布仍由 Slidev 自身等比缩放，所有教学内容和动画不变。
+
+两侧独立留白中提供 44px 圆形上一/下一步按钮，随画布一起旋转；先推进当前页 clicks，再翻页，finish 禁止继续前进。使用箭头翻页，不提供滑动翻页（手机模式隔离 Slidev 默认物理坐标 swipe，避免误触）；原教学按钮和 SVG 指针交互保留。底部工具栏仍隐藏。适配 resize、orientationchange、visualViewport 和安全区，动态高度有 dvh/fallback，减少动态效果偏好沿用原组件行为。
+
+当前服务继续使用 http://127.0.0.1:3000 ，可在本机 Chrome 设备模拟中测试 390×844 / 844×390。服务只监听回环地址，手机直接输入电脑局域网 IP **不能访问**；真机需另行配置可信本地转发，本次未修改网络绑定或线上部署。已验证 Chromium 触屏模拟，**尚未验证真机 iOS Safari** 的地址栏收放、安全区和触控表现；浏览器不能保证强制系统横屏，小字仍受手机物理尺寸限制。
+
 ## 内容与讲解步骤
 
 | 页 | 内容 | 推进步骤 |
@@ -58,6 +66,7 @@ npm run check       # JS 语法检查 + 生产构建
 npm run build       # 静态输出 dist/
 npx vite preview --host 127.0.0.1 --port 3102
 TEST_URL=http://127.0.0.1:3000 npm run test:browser
+TEST_URL=http://127.0.0.1:3000 npm run test:mobile # 8 页所有 clicks、触屏导航、旋转及桌面回归
 npm run test:sidebar    # 默认检查已有 3000 服务，逐页新浏览器上下文
 npm run test:production # base 子路径构建 + 临时静态服务 + 右栏及完整浏览器回归
 ```
@@ -81,6 +90,9 @@ npm run test:production # base 子路径构建 + 临时静态服务 + 右栏及�
 部署时将 `dist/index.html` 复制为 `dist/404.html`，使 `/uv-inkjet-presentation/2`、`/uv-inkjet-presentation/8` 等深链接能够启动 Slidev。GitHub Pages 对这些回退请求仍返回 HTTP 404，但浏览器会正常加载课件；首页及静态资源返回 HTTP 200。上文 `/1` 至 `/8` 路径均相对于课件部署根目录，线上访问时需带 `/uv-inkjet-presentation/` 前缀。
 
 ## 文件
+
+- `global-top.vue`：全局手机视口旋转、独立触屏导航、安全区及监听清理；只改变外层尺寸，内部缩放仍由 Slidev ResizeObserver 负责。
+- `tests/mobile.mjs`：Chromium hasTouch/isMobile 双方向布局及全部点击状态检查，截图 `/tmp/uv-mobile-{portrait,landscape}-{1,3,6,8}.png`。
 
 - `slides.md`：8 页编排、标题、演讲备注和逐步揭示数量。
 - `components/DropletLayer.vue`：液滴体积与单层厚度的可逆过渡，独立 scoped CSS。
