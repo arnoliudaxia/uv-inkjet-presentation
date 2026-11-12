@@ -1,0 +1,123 @@
+/* Light presentation palette. Loaded after the shared story/advanced rules.
+   SVG geometry and reveal/animation rules deliberately remain unchanged. */
+:root {
+  color-scheme: light;
+  --bg: #f8fafc; --panel: #ffffff; --line: #ccd7e2;
+  --text: #24364b; --muted: #52677b; --cyan: #006b91; --gold: #8a5700;
+  --cyan-fill: #00a6df; --gold-fill: #c08000;
+  --slidev-slide-container-background: #f8fafc;
+}
+/* Root nesting adds one class-level specificity over the base rules, so Vue's
+   lazy story/advanced imports cannot restore dark colors. Layout stays unlayered. */
+:root {
+&, body, #app, #slide-container, .slidev-slide-container { background-color: var(--bg); }
+.lesson-slide { background: radial-gradient(ellipse at 55% 55%, #edf6f8, transparent 65%), var(--bg); }
+.lesson-slide button:hover { background: #e8f0f5; border-color: #829bad; }
+.topic-pill { color: #52677b; border-color: #ccd7e2; }
+.visual-panel { background: radial-gradient(ellipse at center, #edf6f8, transparent 68%), linear-gradient(#ffffff, #f1f5f9), #ffffff; }
+.visual-panel::before { background-image: linear-gradient(#52718a08 1px, transparent 1px), linear-gradient(90deg, #52718a08 1px, transparent 1px); }
+.panel-label { color: #435c70; }
+.panel-label > span:last-child { color: #52677b; }
+.live-dot { box-shadow: none; }
+.lesson-slide .component-card { background: #ffffff; border-color: #ccd7e2; }
+.lesson-slide .component-card.selected { border-color: #72aab5; background: #eaf5f7; }
+.lesson-slide .ceramic-card.selected { border-color: #c4a367; background: #fff6e5; }
+.component-card small, .lesson-slide .detail-box p { color: #52677b; }
+.detail-box { border-left-color: #829bad; }
+.lesson-slide .stage-button { border-left-color: #ccd7e2; }
+.lesson-slide .stage-button.active { background: #eaf5f7; }
+.stage-index { color: #52677b; }
+.lesson-slide .play-toggle { background: #eaf5f7; border-color: #72aab5; }
+.chart-grid path { stroke: #d5dfe7; }
+.chart-axis { stroke: #6a8195; }
+.axis-text { fill: #52677b; }
+.wave-labels text { fill: #435c70; }
+.wave-cursor circle { stroke: #ffffff; }
+.wave-legend { color: #52677b; }
+.wave-warning { border-color: #d8c49c; background: #fff8eb; }
+.wave-warning > span { border-color: #a37932; }
+.lesson-slide .wave-warning p { color: #685b43; }
+.wave-warning strong { color: #805309; }
+.head-outline { fill: #e1e9ef; stroke: #657f92; }
+.ink-path { stroke: #007caf; }
+.svg-label { fill: #24364b; }
+.svg-sub { fill: #52677b; }
+.leader { stroke: #6a8195; }
+.gold-label { fill: var(--gold); }
+.svg-part:focus-visible .leader { stroke: #006b91; }
+/* Flow marks sit over the colored ink, rather than the pale panel. */
+.flow-line { stroke: #ffffff; opacity: .85; }
+.droplet { fill: var(--cyan-fill); filter: none; }
+.pressure-ring { stroke: #ffffff; }
+.lesson-slide .sync-stage-buttons button.active { border-color: #72aab5; background: #eaf5f7; }
+
+.story-demo { --story-cyan: #006b91; --story-gold: #8a5700; color: #24364b; }
+.story-demo .story-target { stroke: var(--gold-fill); }
+.story-demo .story-signal { stroke: var(--cyan-fill); }
+.story-demo .story-visual { border-color: #ccd7e2; background: radial-gradient(ellipse at 50% 45%, #edf6f8, transparent 72%), #ffffff; }
+.story-demo .story-bar { color: #52677b; }
+.story-demo svg text { fill: #24364b; }
+.story-demo svg .story-small { fill: #52677b; }
+.story-demo svg .story-number, .story-demo svg .story-gold { fill: var(--story-gold); }
+.story-demo svg .story-cyan { fill: var(--story-cyan); }
+.story-demo .story-base { stroke: #657f92; }
+.story-demo .story-guide { stroke: #c5d3de; }
+.story-demo .story-foot { color: #52677b; border-color: #ccd7e2; }
+.story-demo .story-card { border-color: #ccd7e2; background: #ffffff; }
+.story-demo .story-card.active { border-color: #72aab5; background: #eaf5f7; }
+.story-demo .story-card h3 { color: #24364b; }
+.story-demo .story-card p, .story-demo .story-caution p { color: #52677b; }
+.story-demo .story-progress { color: #52677b; }
+
+.adv-root { --adv-cyan: #006b91; --adv-gold: #8a5700; --adv-muted: #52677b; color: #24364b; }
+.adv-wave, .adv-line-key { stroke: var(--cyan-fill); border-color: var(--cyan-fill); }
+.adv-wire, .adv-dimension path { stroke: var(--gold-fill); }
+.adv-dimension circle { fill: var(--gold-fill); }
+.adv-mean-key { border-color: var(--gold-fill); }
+.adv-panel { border-color: #ccd7e2; background: radial-gradient(ellipse at 55% 40%, #edf6f8, transparent 75%), #ffffff; }
+.adv-panel-head { color: #435c70; }
+.adv-grid path { stroke: #d5dfe7; }
+.adv-axis { stroke: #6a8195; }
+.adv-svg-text { fill: #24364b; }
+.adv-svg-muted { fill: #52677b; }
+.adv-leader { stroke: #6a8195; }
+.adv-device { fill: #e1e9ef; stroke: #657f92; }
+.adv-caption strong { color: #24364b; }
+.adv-explanation { border-left-color: #72aab5; }
+.adv-step-list li { border-color: #ccd7e2; color: #52677b; }
+.adv-step-list li.is-active { border-color: var(--adv-cyan); color: var(--adv-cyan); }
+.adv-caution { border-color: #d8c49c; background: #fff8eb; }
+.adv-caution p { color: #685b43; }
+.adv-root .adv-help { color: #52677b; }
+.adv-root button { color: #24364b; background: #ffffff; border-color: #b5c6d3; }
+.adv-root button:hover { background: #e8f0f5; border-color: #829bad; }
+.adv-tabs button.is-selected { background: #eaf5f7; border-color: var(--adv-cyan); color: var(--adv-cyan); }
+.adv-slider label { color: #24364b; }
+.adv-slider input { color-scheme: light; }
+.adv-coupling span { border-color: #b5c6d3; color: #435c70; background: #ffffff; }
+.adv-loop { border-color: #a8c5cd; background: #eaf5f7; color: #315463; }
+.adv-root h3 { color: #24364b; }
+.adv-specs { border-color: #ccd7e2; background: #ffffff; }
+.adv-specs dd { color: #24364b; }
+.adv-methods p { color: #435c70; }
+
+/* Presentation attributes (including Vue-bound fills) are intentionally matched
+   here: CSS beats SVG attributes without !important or affecting reveal state. */
+.lesson-slide svg [fill="#080f1c"] { fill: #f1f5f9; }
+.lesson-slide svg [fill="#49dfeb"],
+.lesson-slide svg [fill="#55e5ed"],
+.lesson-slide svg [fill="#74f3f7"] { fill: var(--cyan-fill); }
+.lesson-slide svg [fill="#efc575"] { fill: var(--gold-fill); }
+.lesson-slide svg [fill="#53462d"] { fill: #f4e3c0; }
+.lesson-slide svg [stroke="#49dfeb"],
+.lesson-slide svg [stroke="#6df0f4"],
+.lesson-slide svg [stroke="#8cf5f7"],
+.lesson-slide svg [stroke="#affcff"] { stroke: var(--cyan-fill); }
+.lesson-slide svg [stroke="#efc575"],
+.lesson-slide svg [stroke="#ffe0a0"] { stroke: var(--gold-fill); }
+.lesson-slide svg [stroke="#dae3e8"] { stroke: #657f92; }
+.lesson-slide svg [stroke="#0c1725"] { stroke: #ffffff; }
+.lesson-slide svg [stroke="#354b5e"],
+.lesson-slide svg [stroke="#2b4153"] { stroke: #b5c6d3; }
+}
+

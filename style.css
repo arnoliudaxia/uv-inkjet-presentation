@@ -1,8 +1,13 @@
+@import './styles/story.css';
+@import './styles/advanced.css';
+@import './styles/light.css';
+
 :root {
-  color-scheme: dark;
-  --bg: #080f1c; --panel: #0e1928; --line: #243347;
-  --text: #eef5fa; --muted: #8b9eaf; --cyan: #49dfeb; --gold: #efc575;
-  --slidev-slide-container-background: #080f1c;
+  color-scheme: light;
+  --bg: #f8fafc; --panel: #ffffff; --line: #ccd7e2;
+  --text: #24364b; --muted: #52677b; --cyan: #006b91; --gold: #8a5700;
+  --cyan-fill: #00a6df; --gold-fill: #c08000;
+  --slidev-slide-container-background: #f8fafc;
 }
 html, body, #app { margin: 0; width: 100%; height: 100%; background: var(--bg); }
 /* Only remove Slidev's chrome, not the slide container or keyboard handlers.
@@ -38,7 +43,7 @@ html, body, #app { margin: 0; width: 100%; height: 100%; background: var(--bg); 
 .diagram-host svg { width: 100%; height: 100%; display: block; max-height: 100%; }
 .diagram-foot { display: flex; justify-content: center; gap: 24px; padding: 12px 16px 20px; color: var(--muted); font-size: 11px; position: relative; }
 .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 8px; }
-.cyan { background: var(--cyan); }.gold { background: var(--gold); }
+.cyan { background: var(--cyan-fill); }.gold { background: var(--gold-fill); }
 .section-kicker { font-size: 12px; letter-spacing: .16em; color: var(--muted); display: flex; justify-content: space-between; margin: 4px 0 20px; }
 .section-kicker span { color: var(--cyan); letter-spacing: .05em; }
 .anatomy-notes, .cycle-notes { display: flex; flex-direction: column; min-height: 0; }
@@ -71,10 +76,10 @@ html, body, #app { margin: 0; width: 100%; height: 100%; background: var(--bg); 
 .chart-grid path { fill: none; stroke: #253849; stroke-dasharray: 3 5; }
 .chart-axis { fill: none; stroke: #61778a; stroke-width: 1; }
 .axis-text { fill: #8fa4b5; font-size: 13px; }
-.wave-line { fill: none; stroke: var(--cyan); stroke-width: 3; stroke-linejoin: round; }
+.wave-line { fill: none; stroke: var(--cyan-fill); stroke-width: 3; stroke-linejoin: round; }
 .wave-labels text { fill: #a4bac8; font-size: 14px; text-anchor: middle; }
-.wave-cursor path { stroke: var(--gold); stroke-width: 1.5; stroke-dasharray: 4 4; }
-.wave-cursor circle { fill: var(--gold); stroke: #0e1928; stroke-width: 3; }
+.wave-cursor path { stroke: var(--gold-fill); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.wave-cursor circle { fill: var(--gold-fill); stroke: #0e1928; stroke-width: 3; }
 .wave-legend { padding: 8px 28px 20px; display: flex; gap: 32px; font-size: 12px; color: #a6becd; }
 .gold-text { color: var(--gold); }
 .wave-warning { display: flex; gap: 14px; align-items: flex-start; margin-top: 18px; border: 1px solid #5a4933; border-radius: 8px; background: #32291c44; padding: 14px 18px; }
@@ -103,5 +108,10 @@ html, body, #app { margin: 0; width: 100%; height: 100%; background: var(--bg); 
 .moving .flow-line { animation: flow 1.2s linear infinite; }
 .droplet { fill: #55e5ed; filter: drop-shadow(0 0 6px #4cdce966); }
 .pressure-ring { fill: none; stroke: #9cf7ff; stroke-width: 2; }
+.part-group { transform-box: fill-box; transform-origin: center; transition: opacity .5s, transform .6s; }
+.part-group.assembly-hidden { opacity: 0; transform: translateY(-24px); pointer-events: none; }
+.sync-stage-buttons { display: flex; gap: 8px; margin-top: 12px; }
+.lesson-slide .sync-stage-buttons button { padding: 5px 13px; font-size: 13px; }
+.lesson-slide .sync-stage-buttons button.active { color: var(--cyan); border-color: #3a8791; background: #12303a; }
 @keyframes flow { to { stroke-dashoffset: -40; } }
 @media (prefers-reduced-motion: reduce) { .lesson-slide *, .lesson-slide *::before, .lesson-slide *::after { animation: none !important; transition: none !important; } }

@@ -2,14 +2,14 @@
 import { computed } from 'vue'
 import { useSlideContext } from '@slidev/client'
 import PrintheadDiagram from './PrintheadDiagram.vue'
-const { $clicks, $nav } = useSlideContext()
+const { $clicks, $nav, $page } = useSlideContext()
 const revealed = computed(() => Math.min(3, $clicks.value))
 const parts = [
   { title: '墨水供应管道', brief: '把墨水送进墨腔，维持连续供墨。', detail: '墨水沿供应管道进入墨腔，再通向底部喷嘴。实际系统还需控制供墨压力、过滤与脱气；本图只保留单通道。' },
   { title: '压电陶瓷', brief: '经可变形腔壁，改变墨腔容积。', detail: '压电陶瓷位于墨腔外，通过可变形腔壁传递位移。形变改变墨腔容积并激发压力波，而不是直接接触墨水“挤出一滴”。' },
   { title: '喷嘴', brief: '液柱在惯性与表面张力作用下断滴。', detail: '墨腔与底部喷嘴直接连通。合适的瞬态压力使液面外凸、拉成液柱，并在惯性与表面张力作用下断滴。' },
 ]
-function choose(part) { $nav.value.go(1, part) }
+function choose(part) { $nav.value.go($page.value, part) }
 </script>
 
 <template>
@@ -28,7 +28,7 @@ function choose(part) { $nav.value.go(1, part) }
         <span class="tiny-label">{{ revealed ? `0${revealed} / ${parts[revealed - 1].title}` : '观察提示' }}</span>
         <p>{{ revealed ? parts[revealed - 1].detail : '先看完整墨路：供应管道 → 墨腔 → 喷嘴。按 → 或空格，依次认识三个部件；按 ← 可逐步收起。' }}</p>
       </div>
-      <p class="note">→ / 空格：逐步揭示，三步后进入喷墨循环</p>
+      <p class="note">→ / 空格：逐步揭示，三步后进入波形讲解</p>
     </aside>
   </div>
 </template>

@@ -10,7 +10,6 @@ defineProps({ number: String, eyebrow: String, title: String, subtitle: String, 
         <h1>{{ title }}</h1>
         <p class="subtitle">{{ subtitle }}</p>
       </div>
-      <span class="topic-pill">{{ topic }}</span>
     </header>
     <slot />
   </section>

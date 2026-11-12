@@ -1,0 +1,35 @@
+/* Shared only by the first five story diagrams; canvas sizing belongs to LessonSlide. */
+.story-demo { --story-cyan: #49dfeb; --story-gold: #efc575; display: grid; grid-template-columns: minmax(0, 2.35fr) minmax(280px, 1fr); gap: 28px; flex: 1; min-height: 0; width: 100%; color: #eef5fa; }
+.story-demo, .story-demo * { box-sizing: border-box; }
+.story-demo .story-visual { display: flex; flex-direction: column; min-height: 0; overflow: hidden; border: 1px solid #243347; border-radius: 12px; background: radial-gradient(ellipse at 50% 45%, #12354166, transparent 72%), #0c1725; }
+.story-demo .story-bar { padding: 18px 22px 8px; display: flex; justify-content: space-between; gap: 12px; color: #a9bfce; font-size: 13px; }
+.story-demo .story-bar b { color: var(--story-gold); font-weight: 600; }
+.story-demo svg { display: block; width: 100%; flex: 1; min-height: 0; font-family: inherit; }
+.story-demo svg text { fill: #dceaf2; font-size: 16px; }
+.story-demo svg .story-small { fill: #96afbf; font-size: 13px; }
+.story-demo svg .story-number { fill: var(--story-gold); font-size: 25px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.story-demo svg .story-gold { fill: var(--story-gold); }
+.story-demo svg .story-cyan { fill: var(--story-cyan); }
+.story-demo .story-target { stroke: var(--story-gold); stroke-width: 1.5; stroke-dasharray: 7 6; fill: none; }
+.story-demo .story-base { stroke: #5f788c; stroke-width: 2; fill: none; }
+.story-demo .story-guide { stroke: #2b4153; stroke-width: 1; fill: none; }
+.story-demo .story-foot { position: relative; padding: 10px 22px 17px; color: #9bb0bf; font-size: 12px; line-height: 1.6; border-top: 1px solid #213345; }
+.story-demo .story-notes { display: flex; flex-direction: column; gap: 15px; min-height: 0; }
+.story-demo .story-step { color: var(--story-cyan); font-size: 12px; letter-spacing: .12em; padding: 3px 0; }
+.story-demo .story-card { border: 1px solid #273c4e; background: #101e2c; border-radius: 9px; padding: 17px 18px; }
+.story-demo .story-card.active { border-color: #43828b; background: #112c38; }
+.story-demo .story-card h3 { font-size: 20px; font-weight: 600; line-height: 1.4; margin: 0 0 9px; color: #edf6fa; }
+.story-demo .story-card p, .story-demo .story-caution p { font-size: 14px; line-height: 1.75; margin: 0; color: #b0c3cf; }
+.story-demo .story-card strong { color: var(--story-cyan); font-weight: 600; }
+.story-demo .story-caution { margin-top: auto; border-left: 2px solid var(--story-gold); padding: 4px 0 4px 16px; }
+.story-demo .story-caution b { display: block; color: var(--story-gold); font-size: 14px; margin-bottom: 7px; }
+.story-demo .story-progress { color: #819bad; font-size: 12px; margin-top: 3px; }
+.story-demo .story-reveal { transition: opacity .35s ease, transform .35s ease; }
+.story-demo .story-hidden { opacity: 0; pointer-events: none; }
+.story-demo .story-layer { animation: story-appear 10ms linear both; animation-delay: var(--delay, 0s); }
+.story-demo .story-dot { transition: opacity .35s ease, r .35s ease; }
+.story-demo .story-signal { fill: none; stroke: var(--story-cyan); stroke-width: 2.5; stroke-linejoin: round; stroke-dasharray: 550; animation: story-trace 1.2s ease both; }
+@keyframes story-appear { from { visibility: hidden; } to { visibility: visible; } }
+@keyframes story-trace { from { stroke-dashoffset: 550; } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .story-demo *, .story-demo *::before, .story-demo *::after { animation: none !important; transition: none !important; } }
+@media (max-width: 900px) { .story-demo { grid-template-columns: minmax(0, 2fr) minmax(230px, 1fr); gap: 18px; } }
